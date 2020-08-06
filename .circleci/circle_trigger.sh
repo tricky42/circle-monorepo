@@ -38,6 +38,13 @@ if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_CO
 
   REMOTE_BRANCHES=$(git branch -r | sed 's/\s*origin\///' | tr '\n' ' ')
   PARENT_BRANCH=master
+
+  echo "#### TREE: "
+  echo "${TREE}"
+
+  echo "#### REMOTE_BRANCHES: "
+  echo "${REMOTE_BRANCHES}"
+  
   for BRANCH in ${TREE[@]}
   do
     BRANCH=${BRANCH#"origin/"}
