@@ -4,10 +4,64 @@ version: 2.1
 orbs:
   # Declare a dependency on the welcome-orb
   welcome: circleci/welcome-orb@0.4.1
-# Orchestrate or schedule a set of jobs
+
+parameters:
+  trigger:
+    type: boolean
+    default: true
+
+  backoffice:
+    type: boolean
+    default: false
+  console:
+    type: boolean
+    default: false
+
+jobs:
+  trigger-workflows:
+    docker: 
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Trigger workflows
+          command: |
+            chmod +x .circleci/circle_trigger.sh 
+            .circleci/circle_trigger.sh
+
+  hello: 
+    parameters:
+      msg:
+        type: string
+        default: World
+    docker: 
+      - image: cimg/base:stable
+    steps: 
+      - run: |
+          echo "Hello << parameters.msg >>!"
+
 workflows:
-  # Name the workflow "welcome"
-  welcome:
-    # Run the welcome/run job in its own container
+  monorepo:
+    when: << pipeline.parameters.trigger >>
     jobs:
-      - welcome/run
+      - trigger-workflows
+
+  backoffice:
+    when: << pipeline.parameters.backoffice >>
+    jobs:
+      - backoffice-test
+      - backoffice-test-integration:
+          requires:
+            - backoffice-test
+      - build-and-publish-container:
+          component: backoffice
+          docker-context-path: .
+          dockerfile-path: ./backoffice/src
+          requires:
+            - backoffice-test-integration
+
+  console:
+    when: << pipeline.parameters.console >>
+    jobs:
+      - publish-helm-chart:
+          component: backoffice
