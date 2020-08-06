@@ -49,19 +49,11 @@ workflows:
   backoffice:
     when: << pipeline.parameters.backoffice >>
     jobs:
-      - backoffice-test
-      - backoffice-test-integration:
-          requires:
-            - backoffice-test
-      - build-and-publish-container:
-          component: backoffice
-          docker-context-path: .
-          dockerfile-path: ./backoffice/src
-          requires:
-            - backoffice-test-integration
+      - hello:
+          msg: Backoffice
 
   console:
     when: << pipeline.parameters.console >>
     jobs:
-      - publish-helm-chart:
-          component: backoffice
+      - hello:
+          msg: Console
