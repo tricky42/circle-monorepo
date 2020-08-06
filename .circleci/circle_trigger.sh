@@ -22,26 +22,26 @@ echo "################################################################"
 
 LAST_COMPLETED_BUILD_URL="${CIRCLE_API}/v1.1/project/${REPOSITORY_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?filter=completed&limit=100&shallow=true"
 echo "LAST_COMPLETED_BUILD_URL: $LAST_COMPLETED_BUILD_URL"
-curl -Ss -u "${CIRCLE_TOKEN}": "${LAST_COMPLETED_BUILD_URL}" > circle.json
-LAST_COMPLETED_BUILD_SHA=$(jq -r 'map(select(.status == "success") | select(.workflows.workflow_name != "ci")) | .[0]["vcs_revision"]' < "circle.json")
+curl -Ss -u ${CIRCLE_TOKEN}: ${LAST_COMPLETED_BUILD_URL} > circle.json
+LAST_COMPLETED_BUILD_SHA=`cat circle.json | jq -r 'map(select(.status == "success") | select(.workflows.workflow_name != "ci")) | .[0]["vcs_revision"]'`
 
-if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t "$LAST_COMPLETED_BUILD_SHA") != "commit" ]]; then
+if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
   echo -e "\e[93mThere are no completed CI builds in branch ${CIRCLE_BRANCH}.\e[0m"
 
   # Adapted from https://gist.github.com/joechrysler/6073741
   TREE=$(git show-branch -a 2>/dev/null \
     | grep '\*' \
-    | grep -v "$(git rev-parse --abbrev-ref HEAD)" \
+    | grep -v `git rev-parse --abbrev-ref HEAD` \
     | sed 's/.*\[\(.*\)\].*/\1/' \
     | sed 's/[\^~].*//' \
     | uniq)
 
   REMOTE_BRANCHES=$(git branch -r | sed 's/\s*origin\///' | tr '\n' ' ')
   PARENT_BRANCH=master
-  for BRANCH in "${TREE[@]}"
+  for BRANCH in ${TREE[@]}
   do
     BRANCH=${BRANCH#"origin/"}
-    if [[ " ${REMOTE_BRANCHES[*]} " == *" ${BRANCH} "* ]]; then
+    if [[ " ${REMOTE_BRANCHES[@]} " == *" ${BRANCH} "* ]]; then
         echo "Found the parent branch: ${CIRCLE_BRANCH}..${BRANCH}"
         PARENT_BRANCH=$BRANCH
         break
@@ -51,13 +51,13 @@ if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t "$LAST_C
   echo "Searching for CI builds in branch '${PARENT_BRANCH}' ..."
 
   LAST_COMPLETED_BUILD_URL="${CIRCLE_API}/v1.1/project/${REPOSITORY_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${PARENT_BRANCH}?filter=completed&limit=100&shallow=true"
-  LAST_COMPLETED_BUILD_SHA=$(curl -Ss -u "${CIRCLE_TOKEN}:" "${LAST_COMPLETED_BUILD_URL}" \
+  LAST_COMPLETED_BUILD_SHA=`curl -Ss -u "${CIRCLE_TOKEN}:" "${LAST_COMPLETED_BUILD_URL}" \
     | jq -r "map(\
       select(.status == \"success\") | select(.workflows.workflow_name != \"ci\") | select(.build_num < ${CIRCLE_BUILD_NUM})) \
-    | .[0][\"vcs_revision\"]")
+    | .[0][\"vcs_revision\"]"`
 fi
 
-if [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t "$LAST_COMPLETED_BUILD_SHA") != "commit" ]]; then
+if [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
   echo -e "\e[93mNo CI builds for branch ${PARENT_BRANCH}. Using master.\e[0m"
   LAST_COMPLETED_BUILD_SHA=$(git rev-parse origin/master)
 fi
@@ -80,23 +80,24 @@ PARAMETERS='"trigger":false'
 COUNT=0
 
 # Get the list of workflows in current branch for which the CI is currently in failed state
-FAILED_WORKFLOWS=$(jq -r "map(select(.branch == \"${CIRCLE_BRANCH}\")) \
+FAILED_WORKFLOWS=$(cat circle.json \
+  | jq -r "map(select(.branch == \"${CIRCLE_BRANCH}\")) \
   | group_by(.workflows.workflow_name) \
   | .[] \
   | {workflow: .[0].workflows.workflow_name, status: .[0].status} \
   | select(.status == \"failed\") \
-  | .workflow" < "circle.json")
+  | .workflow")
 
-echo "Workflows currently in failed status: (${FAILED_WORKFLOWS[*]})."
+echo "Workflows currently in failed status: (${FAILED_WORKFLOWS[@]})."
 
-for PACKAGE in "${PACKAGES[@]}"
+for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
-  LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 "$LAST_COMPLETED_BUILD_SHA".."$CIRCLE_SHA1" --format=format:%H --full-diff -- "${PACKAGE_PATH#/}")
+  LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
 
   if [[ -z "$LATEST_COMMIT_SINCE_LAST_BUILD" ]]; then
     INCLUDED=0
-    for FAILED_BUILD in "${FAILED_WORKFLOWS[@]}"
+    for FAILED_BUILD in ${FAILED_WORKFLOWS[@]}
     do
       if [[ "$PACKAGE" == "$FAILED_BUILD" ]]; then
         INCLUDED=1
@@ -134,7 +135,7 @@ echo -e "  $DATA"
 
 URL="${CIRCLE_API}/v2/project/${REPOSITORY_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pipeline"
 
-HTTP_RESPONSE=$(curl -s -u "${CIRCLE_TOKEN}": -o response.txt -w "%{http_code}" -X POST --header "Content-Type: application/json" -d "$DATA" "$URL")
+HTTP_RESPONSE=$(curl -s -u ${CIRCLE_TOKEN}: -o response.txt -w "%{http_code}" -X POST --header "Content-Type: application/json" -d "$DATA" "$URL")
 
 if [ "$HTTP_RESPONSE" -ge "200" ] && [ "$HTTP_RESPONSE" -lt "300" ]; then
     echo "API call succeeded."
