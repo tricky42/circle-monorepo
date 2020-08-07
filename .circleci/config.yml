@@ -37,8 +37,9 @@ jobs:
     docker: 
       - image: cimg/base:stable
     steps: 
-      - run: |
-          echo "Hello << parameters.msg >>!"
+      - run: 
+          name: "Hello << parameters.msg >>!"
+          command: echo "Hello << parameters.msg >>!"
 
 workflows:
   monorepo:
