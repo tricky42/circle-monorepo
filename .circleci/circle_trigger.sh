@@ -14,6 +14,11 @@ CIRCLE_API="https://circleci.com/api"
 ## 0. Environments
 ############################################
 
+sudo add-apt-repository ppa:git-core/ppa -y
+sudo apt-get update
+sudo apt-get install git -y
+git --version
+
 echo "################################################################"
 echo "################################################################"
 echo "## CIRCLE TRIGGER SCRIPT ENV"
