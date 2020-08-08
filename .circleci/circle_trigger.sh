@@ -11,6 +11,23 @@ REPOSITORY_TYPE="github"
 CIRCLE_API="https://circleci.com/api"
 
 ############################################
+## 0. Environments
+############################################
+
+echo "################################################################"
+echo "################################################################"
+echo "## CIRCLE TRIGGER SCRIPT ENV"
+echo "################################################################"
+echo " - CIRCLE_PULL_REQUEST:     ${CIRCLE_PULL_REQUEST}"
+echo " - CIRCLE_PULL_REQUESTS:    ${CIRCLE_PULL_REQUESTS}"
+echo " - CIRCLE_PROJECT_REPONAME: ${CIRCLE_PROJECT_REPONAME}"
+echo " - CIRCLE_PR_REPONAME:      ${CIRCLE_PR_REPONAME}"
+echo " - CIRCLE_PR_NUMBER:        ${CIRCLE_PR_NUMBER}"
+echo " - CIRCLE_BRANCH:           ${CIRCLE_BRANCH}"
+
+echo "################################################################"
+
+############################################
 ## 1. Commit SHA of last CI build
 ############################################
 
@@ -25,6 +42,9 @@ echo "LAST_COMPLETED_BUILD_URL: $LAST_COMPLETED_BUILD_URL"
 curl -Ss -u ${CIRCLE_TOKEN}: ${LAST_COMPLETED_BUILD_URL} > circle.json
 LAST_COMPLETED_BUILD_SHA=`cat circle.json | jq -r 'map(select(.status == "success") | select(.workflows.workflow_name != "ci")) | .[0]["vcs_revision"]'`
 
+echo "#### LAST_COMPLETED_BUILD_SHA: "
+echo "${LAST_COMPLETED_BUILD_SHA}"
+
 if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
   echo -e "\e[93mThere are no completed CI builds in branch ${CIRCLE_BRANCH}.\e[0m"
 
@@ -38,6 +58,13 @@ if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_CO
 
   REMOTE_BRANCHES=$(git branch -r | sed 's/\s*origin\///' | tr '\n' ' ')
   PARENT_BRANCH=master
+
+  echo "#### TREE: "
+  echo "${TREE}"
+
+  echo "#### REMOTE_BRANCHES: "
+  echo "${REMOTE_BRANCHES}"
+  
   for BRANCH in ${TREE[@]}
   do
     BRANCH=${BRANCH#"origin/"}

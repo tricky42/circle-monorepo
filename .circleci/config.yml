@@ -36,9 +36,13 @@ jobs:
         default: World
     docker: 
       - image: cimg/base:stable
-    steps: 
-      - run: |
-          echo "Hello << parameters.msg >>!"
+    steps:
+      - checkout 
+      - run: 
+          name: "Hello << parameters.msg >>!"
+          command: |
+            echo "Hello << parameters.msg >>!"
+            ./<< parameters.msg >>/<< parameters.msg >>.sh
 
 workflows:
   monorepo:
@@ -50,10 +54,10 @@ workflows:
     when: << pipeline.parameters.backoffice >>
     jobs:
       - hello:
-          msg: Backoffice
+          msg: backoffice
 
   console:
     when: << pipeline.parameters.console >>
     jobs:
       - hello:
-          msg: Console
+          msg: console
