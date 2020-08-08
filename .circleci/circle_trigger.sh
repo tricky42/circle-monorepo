@@ -117,6 +117,8 @@ FAILED_WORKFLOWS=$(cat circle.json \
 
 echo "Workflows currently in failed status: (${FAILED_WORKFLOWS[@]})."
 
+git --version 
+
 for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
