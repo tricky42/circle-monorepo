@@ -11,6 +11,23 @@ REPOSITORY_TYPE="github"
 CIRCLE_API="https://circleci.com/api"
 
 ############################################
+## 0. Environments
+############################################
+
+echo "################################################################"
+echo "################################################################"
+echo "## CIRCLE TRIGGER SCRIPT ENV"
+echo "################################################################"
+echo " - CIRCLE_PULL_REQUEST:     ${CIRCLE_PULL_REQUEST}"
+echo " - CIRCLE_PULL_REQUESTS:    ${CIRCLE_PULL_REQUESTS}"
+echo " - CIRCLE_PROJECT_REPONAME: ${CIRCLE_PROJECT_REPONAME}"
+echo " - CIRCLE_PR_REPONAME:      ${CIRCLE_PR_REPONAME}"
+echo " - CIRCLE_PR_NUMBER:        ${CIRCLE_PR_NUMBER}"
+echo " - CIRCLE_BRANCH:           ${CIRCLE_BRANCH}"
+
+echo "################################################################"
+
+############################################
 ## 1. Commit SHA of last CI build
 ############################################
 
