@@ -123,8 +123,8 @@ do
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master.. --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     echo "PULL-REQUEST HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"
-    ONE=$(git log master.. --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
-    ALL=$(git log master.. --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+    ONE=$(git log master.. --name-only --oneline -- ${PACKAGE})
+    ALL=$(git log master.. --name-only --oneline)
     echo " '${PACKAGE}': ${ONE}"
     echo " 'ALL': ${ALL}"
   else
