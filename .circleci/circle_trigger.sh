@@ -120,7 +120,14 @@ echo "Workflows currently in failed status: (${FAILED_WORKFLOWS[@]})."
 for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
-  LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
+  if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
+    echo "PULL-REQUEST HANDLINE"
+    LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master.. --name-only --oneline -- ${PACKAGE_PATH#/} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+  else
+    echo "DEFAULT (MASTER / BRANCH) HANDLINE"
+    LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
+  fi
+  
 
   if [[ -z "$LATEST_COMMIT_SINCE_LAST_BUILD" ]]; then
     INCLUDED=0

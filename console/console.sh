@@ -1,3 +1,3 @@
 #!/bin/bash
 echo "Console magic....."
-exit 0
+exit 1
