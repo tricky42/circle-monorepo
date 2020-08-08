@@ -125,8 +125,8 @@ do
     
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     echo "PULL-REQUEST HANDLINE (${PACKAGE} - ${LATEST_COMMIT_SINCE_LAST_BUILD})"
-    echo "git --no-pager log master.. --name-only --oneline"
-    git --no-pager log master.. --name-only --oneline 
+    echo "git --no-pager log master.. -- ${PACKAGE}"
+    git --no-pager log master.. -- ${PACKAGE}
     
   else
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
