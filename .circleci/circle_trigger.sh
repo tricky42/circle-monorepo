@@ -19,6 +19,8 @@ sudo apt-get update
 sudo apt-get install git -y
 git --version
 
+git pull --all
+
 echo "################################################################"
 echo "################################################################"
 echo "## CIRCLE TRIGGER SCRIPT ENV"
