@@ -41,7 +41,7 @@ jobs:
           name: "Hello << parameters.msg >>!"
           command: |
             echo "Hello << parameters.msg >>!"
-            << parameters.msg >>/<< parameters.msg >>.sh
+            ./<< parameters.msg >>/<< parameters.msg >>.sh
 
 workflows:
   monorepo:
