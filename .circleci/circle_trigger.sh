@@ -121,11 +121,12 @@ for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
-    echo "PULL-REQUEST HANDLINE"
-    LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master.. --name-only --oneline -- ${PACKAGE_PATH#/} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+    LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master.. --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+    echo "PULL-REQUEST HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"
   else
-    echo "DEFAULT (MASTER / BRANCH) HANDLINE"
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
+    echo "DEFAULT (MASTER / BRANCH) HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"
+    
   fi
   
 
