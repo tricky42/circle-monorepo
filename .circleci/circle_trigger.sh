@@ -88,7 +88,7 @@ if [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COM
   echo -e "\e[93mNo CI builds for branch ${PARENT_BRANCH}. Using master.\e[0m"
   LAST_COMPLETED_BUILD_SHA=$(git rev-parse origin/master)
 fi
-
+echo "PARENT_BRANCH: ${PARENT_BRANCH}"
 ############################################
 ## 2. Changed packages
 ############################################
@@ -123,10 +123,8 @@ do
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master.. --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     echo "PULL-REQUEST HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"
-    ONE=$(git log master.. --name-only --oneline -- ${PACKAGE})
-    ALL=$(git log master.. --name-only --oneline)
-    echo " '${PACKAGE}': ${ONE}"
-    echo " 'ALL': ${ALL}"
+    git log master.. --name-only --oneline -- ${PACKAGE}
+    
   else
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
     echo "DEFAULT (MASTER / BRANCH) HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"
