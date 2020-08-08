@@ -125,6 +125,8 @@ do
     
     infocmp
 
+    msgcat --color=test
+
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     echo "PULL-REQUEST HANDLINE (${PACKAGE} - ${LATEST_COMMIT_SINCE_LAST_BUILD})"
     echo "git log master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE}"
