@@ -121,6 +121,7 @@ for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
+    export TERM=xterm
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master.. --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     echo "PULL-REQUEST HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"
     git log master.. --name-only --oneline -- ${PACKAGE}
