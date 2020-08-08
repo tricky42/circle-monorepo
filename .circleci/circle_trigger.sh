@@ -18,7 +18,8 @@ sudo add-apt-repository ppa:git-core/ppa -y
 sudo apt-get update
 sudo apt-get install git -y
 git --version
-
+git config --global pull.rebase false
+git branch --set-upstream-to=origin/test-pr test-pr
 git pull --all
 
 echo "################################################################"
