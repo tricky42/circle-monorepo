@@ -124,7 +124,7 @@ do
     export TERM=xterm
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     echo "PULL-REQUEST HANDLINE (${PACKAGE} - ${LATEST_COMMIT_SINCE_LAST_BUILD})"
-    git log 
+    git log master.. --name-only --pretty=format: | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq
     
   else
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
