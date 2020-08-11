@@ -82,7 +82,6 @@ if [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COM
   echo -e "\e[93mNo CI builds for branch ${PARENT_BRANCH}. Using master.\e[0m"
   LAST_COMPLETED_BUILD_SHA=$(git rev-parse origin/master)
 fi
-echo "PARENT_BRANCH: ${PARENT_BRANCH}"
 
 ############################################
 ## 2. Changed packages
@@ -120,7 +119,10 @@ for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
-    LATEST_COMMIT_SINCE_LAST_BUILD=$(git --no-pager log origin/master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+    if [ -n "${LATEST_COMMIT_SINCE_LAST_BUILD}" ]; then
+      LATEST_COMMIT_SINCE_LAST_BUILD="## PR ##"
+    fi
+    LATEST_COMMIT_SINCE_LAST_BUILD=$(git --no-pager log origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     if [ -n "${LATEST_COMMIT_SINCE_LAST_BUILD}" ]; then
       LATEST_COMMIT_SINCE_LAST_BUILD="## PR ##"
     fi
