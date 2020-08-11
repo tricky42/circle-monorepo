@@ -87,6 +87,7 @@ echo "-------"
 IFS='\n' read -ra CHANGED_PATH_SEGMENTS <<< "${CHANGED_PATH_SEGMENTS}"
 
 for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
+  CHANGE_DETECTED="false"
   echo " - Current Package Config: ${PACKAGE_CONFIG}"
   IFS='=' read -ra ADDR <<< "${PACKAGE_CONFIG}"
   PACKAGE=${ADDR[0]}
