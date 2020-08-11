@@ -80,7 +80,7 @@ fi
 
 CHANGED_PATH_SEGMENTS=$(git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
 echo "git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq"
-IFS='\n' read -ra CHANGED_PATH_SEGMENTS2 <<< "${CHANGED_PATH_SEGMENTS}"
+IFS=$'\n' read -ra CHANGED_PATH_SEGMENTS2 <<< "${CHANGED_PATH_SEGMENTS}"
 echo "-------"
 echo "${CHANGED_PATH_SEGMENTS}"
 echo "-------"
