@@ -87,7 +87,6 @@ echo "-------"
 IFS='\n' read -ra CHANGED_PATH_SEGMENTS <<< "${CHANGED_PATH_SEGMENTS}"
 
 for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
-  CHANGE_DETECTED="false"
   echo " - Current Package Config: ${PACKAGE_CONFIG}"
   IFS='=' read -ra ADDR <<< "${PACKAGE_CONFIG}"
   PACKAGE=${ADDR[0]}
@@ -136,6 +135,7 @@ for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
     COUNT=$((COUNT + 1))
     echo -e "\e[36m  [+] ${PACKAGE} \e[21m"
   fi
+  CHANGE_DETECTED=
 done
 
 if [[ $COUNT -eq 0 ]]; then
