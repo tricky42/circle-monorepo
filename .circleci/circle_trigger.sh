@@ -95,14 +95,16 @@ do
   read -ra PATHSEGMENTS <<< "${PACKAGE_PATH_SEGMENTS}"
 
   for CHANGED_PATH_SEGMENT in ${CHANGED_PATH_SEGMENTS[@]}; do
+    echo " - CHANGED_PATH_SEGMENT: ${CHANGED_PATH_SEGMENT}"
     for PATH_SEGMENT in ${PACKAGE_PATH_SEGMENTS[@]}; do
-      echo " - Change Detected?: ${PATH_SEGMENT} == ${CHANGED_PATH_SEGMENT}"
+      echo " -- PATH_SEGMENT: ${PATH_SEGMENT}"
       if [ "${PATH_SEGMENT}" == "${CHANGED_PATH_SEGMENT}" ]; then
         CHANGE_DETECTED="true"
         break
       else
         CHANGE_DETECTED="false"
       fi
+      echo " => ${CHANGE_DETECTED}"
     done
     if [ "${CHANGE_DETECTED}" == "true" ]; then
       break
