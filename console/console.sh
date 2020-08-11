@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "NEW BRANCH Console magic..."
+echo "NEW NESTED BRANCH Console magic..."
 exit 0
