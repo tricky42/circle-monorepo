@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "NEW-PR NESTED Console magic..."
+echo "NEW NESTED BRANCH Console magic..."
 exit 0

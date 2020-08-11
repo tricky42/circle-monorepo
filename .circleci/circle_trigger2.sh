@@ -36,23 +36,63 @@ echo "################################################################"
 LAST_COMPLETED_BUILD_URL="${CIRCLE_API}/v1.1/project/${REPOSITORY_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?filter=completed&limit=100&shallow=true"
 curl -Ss -u ${CIRCLE_TOKEN}: ${LAST_COMPLETED_BUILD_URL} > circle.json
 LAST_COMPLETED_BUILD_SHA=`cat circle.json | jq -r 'map(select(.status == "success") | select(.workflows.workflow_name != "ci")) | .[0]["vcs_revision"]'`
-PARENT_BRANCH=$(git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@')
 
 echo " - LAST_COMPLETED_BUILD_SHA: '${LAST_COMPLETED_BUILD_SHA}'"
-echo " - PARENT_BRANCH:            '${PARENT_BRANCH}'"
 
-echo "################################################################"
-echo "## 2. Determine Package Changes"
-echo "################################################################"
+# Adapted from https://gist.github.com/joechrysler/6073741
+# Alternative? https://gist.github.com/joechrysler/6073741#gistcomment-3108387
+# git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'
+TREE=$(git show-branch -a 2>/dev/null \
+    | grep '\*' \
+    | grep -v `git rev-parse --abbrev-ref HEAD` \
+    | sed 's/.*\[\(.*\)\].*/\1/' \
+    | sed 's/[\^~].*//' \
+    | uniq)
 
-# Parsing configuration file with following format:
-# <package_name1>=<path_segment1>,<path_segment2> 
-# <package_name2>=<path_segment3>,<path_segment4>
-#
-PACKAGE_CONFIGS=$(<.circleci/packages.txt)
-echo ">--------------------"
-echo "${PACKAGE_CONFIGS}"
-echo ">--------------------"
+REMOTE_BRANCHES=$(git branch -r | sed 's/\s*origin\///' | tr '\n' ' ')
+PARENT_BRANCH=master
+
+echo "#### TREE: "
+echo "${TREE}"
+
+echo "#### REMOTE_BRANCHES: "
+echo "${REMOTE_BRANCHES}"
+
+for BRANCH in ${TREE[@]}
+do
+  BRANCH=${BRANCH#"origin/"}
+  if [[ " ${REMOTE_BRANCHES[@]} " == *" ${BRANCH} "* ]]; then
+      echo "Found the parent branch: ${CIRCLE_BRANCH}..${BRANCH}"
+      PARENT_BRANCH=$BRANCH
+      break
+  fi
+done
+
+if [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
+  echo -e "\e[93mThere are no completed CI builds in branch ${CIRCLE_BRANCH}.\e[0m"
+
+  echo "Searching for CI builds in branch '${PARENT_BRANCH}' ..."
+
+  LAST_COMPLETED_BUILD_URL="${CIRCLE_API}/v1.1/project/${REPOSITORY_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${PARENT_BRANCH}?filter=completed&limit=100&shallow=true"
+  LAST_COMPLETED_BUILD_SHA=`curl -Ss -u "${CIRCLE_TOKEN}:" "${LAST_COMPLETED_BUILD_URL}" \
+    | jq -r "map(\
+      select(.status == \"success\") | select(.workflows.workflow_name != \"ci\") | select(.build_num < ${CIRCLE_BUILD_NUM})) \
+    | .[0][\"vcs_revision\"]"`
+fi
+
+if [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
+  echo -e "\e[93mNo CI builds for branch ${PARENT_BRANCH}. Using master.\e[0m"
+  LAST_COMPLETED_BUILD_SHA=$(git rev-parse origin/master)
+fi
+
+############################################
+## 2. Changed packages
+############################################
+
+#MODIFIED: we use a txt config to determine which directory paths represent packages with their own CircleCI workflow.
+#PACKAGES=$(ls ${ROOT} -l | grep ^d | awk '{print $9}')
+PACKAGES=$(<.circleci/packages.txt)
+
 echo
 echo "Searching for changes since commit [${LAST_COMPLETED_BUILD_SHA:0:7}] ..."
 
@@ -68,45 +108,32 @@ FAILED_WORKFLOWS=$(cat circle.json \
   | {workflow: .[0].workflows.workflow_name, status: .[0].status} \
   | select(.status == \"failed\") \
   | .workflow")
+
 echo "Workflows currently in failed status: (${FAILED_WORKFLOWS[@]})."
 
 if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
   echo "PULL-REQUEST CHANGE DETECTION: Taking all commits in this PR into account to trigger workflows for all changed packages!"
-  NOPR=""
 else
   echo "DEFAULT (MASTER/BRANCH) CHANGE DETECTION: Only taking changes of the last commits into account. Only workflows of packages which have been changed in this commit are triggered!"
-  NOPR="-1"
 fi
 
-CHANGED_PATH_SEGMENTS="$(git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)"
-echo "git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq"
-IFS=$'\n' read -ra CHANGED_PATH_SEGMENTS2 <<< "${CHANGED_PATH_SEGMENTS}"
-
-for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
-  IFS='=' read -ra ADDR <<< "${PACKAGE_CONFIG}"
-  PACKAGE=${ADDR[0]}
-  PACKAGE_PATH_SEGMENTS=${ADDR[1]}
-    
-  IFS=',' read -ra PATHSEGMENTS <<< "${PACKAGE_PATH_SEGMENTS}"
-  for PATH_SEGMENT in ${PATHSEGMENTS[@]}; do
-    #echo " - PATH_SEGMENT: ${PATH_SEGMENT}"
-    for CHANGED_PATH_SEGMENT in ${CHANGED_PATH_SEGMENTS[@]}; do
-      #echo "   -- CHANGED_PATH_SEGMENT: ${CHANGED_PATH_SEGMENT}"
-      if [ "${PATH_SEGMENT}" == "${CHANGED_PATH_SEGMENT}" ]; then
-        CHANGE_DETECTED="true"
-        break
-      else
-        CHANGE_DETECTED="false"
-      fi
-    done
-    if [ "${CHANGE_DETECTED}" == "true" ]; then
-      break
+for PACKAGE in ${PACKAGES[@]}
+do
+  PACKAGE_PATH=${ROOT#.}/$PACKAGE
+  if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
+    LATEST_COMMIT_SINCE_LAST_BUILD=$(git --no-pager log origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+    echo "git --no-pager log origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)"
+    if [ -n "${LATEST_COMMIT_SINCE_LAST_BUILD}" ]; then
+      LATEST_COMMIT_SINCE_LAST_BUILD="## PR ##"
     fi
-  done
-  
-  if [ "${CHANGE_DETECTED}" == "false" ]; then
+  else
+    LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
+  fi
+
+  if [[ -z "$LATEST_COMMIT_SINCE_LAST_BUILD" ]]; then
     INCLUDED=0
-    for FAILED_BUILD in ${FAILED_WORKFLOWS[@]}; do
+    for FAILED_BUILD in ${FAILED_WORKFLOWS[@]}
+    do
       if [[ "$PACKAGE" == "$FAILED_BUILD" ]]; then
         INCLUDED=1
         PARAMETERS+=", \"$PACKAGE\":true"
@@ -122,9 +149,8 @@ for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
   else
     PARAMETERS+=", \"$PACKAGE\":true"
     COUNT=$((COUNT + 1))
-    echo -e "\e[36m  [+] ${PACKAGE} \e[21m"
+    echo -e "\e[36m  [+] ${PACKAGE} \e[21m (changed in [${LATEST_COMMIT_SINCE_LAST_BUILD:0:7}])\e[0m"
   fi
-  CHANGE_DETECTED=
 done
 
 if [[ $COUNT -eq 0 ]]; then

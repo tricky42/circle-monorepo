@@ -1,2 +1,2 @@
-backoffice
-console
+backoffice=backoffice,stack
+console=console
