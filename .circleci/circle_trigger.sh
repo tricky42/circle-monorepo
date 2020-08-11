@@ -79,7 +79,7 @@ do
 
   echo " - Current Package Config: ${PACKAGE_CONFIG}"
   IFS='='
-  read -ra ADDR <<< "${PACKAGE}"
+  read -ra ADDR <<< "${PACKAGE_CONFIG}"
   PACKAGE=${ADDR[0]}
   PACKAGE_PATH_SEGMENTS=${ADDR[1]}
   echo " - Package:               ${PACKAGE}"
