@@ -119,10 +119,8 @@ for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
-    if [ -n "${LATEST_COMMIT_SINCE_LAST_BUILD}" ]; then
-      LATEST_COMMIT_SINCE_LAST_BUILD="## PR ##"
-    fi
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git --no-pager log origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+    echo "git --no-pager log origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)"
     if [ -n "${LATEST_COMMIT_SINCE_LAST_BUILD}" ]; then
       LATEST_COMMIT_SINCE_LAST_BUILD="## PR ##"
     fi
