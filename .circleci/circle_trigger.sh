@@ -134,7 +134,6 @@ for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
     PARAMETERS+=", \"$PACKAGE\":true"
     COUNT=$((COUNT + 1))
     echo -e "\e[36m  [+] ${PACKAGE} \e[21m (changed in [${LATEST_COMMIT_SINCE_LAST_BUILD:0:7}])\e[0m"
-    break
   fi
 done
 
