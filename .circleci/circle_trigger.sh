@@ -133,10 +133,10 @@ do
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
     export TERM=xterm-256color
     
-    LATEST_COMMIT_SINCE_LAST_BUILD=$(git log master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+    LATEST_COMMIT_SINCE_LAST_BUILD=$(git --no-pager log origin/master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     echo "PULL-REQUEST HANDLINE (${PACKAGE} - ${LATEST_COMMIT_SINCE_LAST_BUILD})"
-    echo "git --no-pager log master.. -- ${PACKAGE}"
-    git --no-pager log master.. -- ${PACKAGE}
+    echo "git --no-pager log origin/master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq"
+    git --no-pager log origin/master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq
     
   else
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
