@@ -39,35 +39,37 @@ LAST_COMPLETED_BUILD_URL="${CIRCLE_API}/v1.1/project/${REPOSITORY_TYPE}/${CIRCLE
 curl -Ss -u ${CIRCLE_TOKEN}: ${LAST_COMPLETED_BUILD_URL} > circle.json
 LAST_COMPLETED_BUILD_SHA=`cat circle.json | jq -r 'map(select(.status == "success") | select(.workflows.workflow_name != "ci")) | .[0]["vcs_revision"]'`
 
-if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
-  echo -e "\e[93mThere are no completed CI builds in branch ${CIRCLE_BRANCH}.\e[0m"
+echo "LAST_COMPLETED_BUILD_SHA: '${LAST_COMPLETED_BUILD_SHA}'"
 
-  # Adapted from https://gist.github.com/joechrysler/6073741
-  TREE=$(git show-branch -a 2>/dev/null \
+# Adapted from https://gist.github.com/joechrysler/6073741
+TREE=$(git show-branch -a 2>/dev/null \
     | grep '\*' \
     | grep -v `git rev-parse --abbrev-ref HEAD` \
     | sed 's/.*\[\(.*\)\].*/\1/' \
     | sed 's/[\^~].*//' \
     | uniq)
 
-  REMOTE_BRANCHES=$(git branch -r | sed 's/\s*origin\///' | tr '\n' ' ')
-  PARENT_BRANCH=master
+REMOTE_BRANCHES=$(git branch -r | sed 's/\s*origin\///' | tr '\n' ' ')
+PARENT_BRANCH=master
 
-  echo "#### TREE: "
-  echo "${TREE}"
+echo "#### TREE: "
+echo "${TREE}"
 
-  echo "#### REMOTE_BRANCHES: "
-  echo "${REMOTE_BRANCHES}"
-  
-  for BRANCH in ${TREE[@]}
-  do
-    BRANCH=${BRANCH#"origin/"}
-    if [[ " ${REMOTE_BRANCHES[@]} " == *" ${BRANCH} "* ]]; then
-        echo "Found the parent branch: ${CIRCLE_BRANCH}..${BRANCH}"
-        PARENT_BRANCH=$BRANCH
-        break
-    fi
-  done
+echo "#### REMOTE_BRANCHES: "
+echo "${REMOTE_BRANCHES}"
+
+for BRANCH in ${TREE[@]}
+do
+  BRANCH=${BRANCH#"origin/"}
+  if [[ " ${REMOTE_BRANCHES[@]} " == *" ${BRANCH} "* ]]; then
+      echo "Found the parent branch: ${CIRCLE_BRANCH}..${BRANCH}"
+      PARENT_BRANCH=$BRANCH
+      break
+  fi
+done
+
+if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
+  echo -e "\e[93mThere are no completed CI builds in branch ${CIRCLE_BRANCH}.\e[0m"
 
   echo "Searching for CI builds in branch '${PARENT_BRANCH}' ..."
 
@@ -76,6 +78,8 @@ if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_CO
     | jq -r "map(\
       select(.status == \"success\") | select(.workflows.workflow_name != \"ci\") | select(.build_num < ${CIRCLE_BUILD_NUM})) \
     | .[0][\"vcs_revision\"]"`
+else
+
 fi
 
 if [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
