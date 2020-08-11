@@ -50,7 +50,9 @@ echo "################################################################"
 # <package_name2>=<path_segment3>,<path_segment4>
 #
 PACKAGE_CONFIGS=$(<.circleci/packages.txt)
-
+echo ">--------------------"
+echo "${PACKAGE_CONFIGS}"
+echo ">--------------------"
 echo
 echo "Searching for changes since commit [${LAST_COMPLETED_BUILD_SHA:0:7}] ..."
 
