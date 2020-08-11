@@ -110,15 +110,22 @@ FAILED_WORKFLOWS=$(cat circle.json \
 
 echo "Workflows currently in failed status: (${FAILED_WORKFLOWS[@]})."
 
+if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
+  echo "PULL-REQUEST CHANGE DETECTION: Taking all commits in this PR into account to trigger workflows for all changed packages!"
+else
+  echo "DEFAULT (MASTER/BRANCH) CHANGE DETECTION: Only taking changes of the last commits into account. Only workflows of packages which have been changed in this commit are triggered!"
+fi
+
 for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git --no-pager log origin/master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
-    echo "PULL-REQUEST HANDLINE (${PACKAGE} - ${LATEST_COMMIT_SINCE_LAST_BUILD})"
+    if [ -n "${LATEST_COMMIT_SINCE_LAST_BUILD}" ]; then
+      LATEST_COMMIT_SINCE_LAST_BUILD="## PR ##"
+    fi
   else
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
-    echo "DEFAULT (MASTER / BRANCH) HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"   
   fi
 
   if [[ -z "$LATEST_COMMIT_SINCE_LAST_BUILD" ]]; then
@@ -137,7 +144,7 @@ do
     if [[ "$INCLUDED" == "0" ]]; then
       echo -e "\e[90m  [-] $PACKAGE \e[0m"
     fi
-  else
+  elkse
     PARAMETERS+=", \"$PACKAGE\":true"
     COUNT=$((COUNT + 1))
     echo -e "\e[36m  [+] ${PACKAGE} \e[21m (changed in [${LATEST_COMMIT_SINCE_LAST_BUILD:0:7}])\e[0m"
