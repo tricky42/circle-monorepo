@@ -70,13 +70,19 @@ echo "Workflows currently in failed status: (${FAILED_WORKFLOWS[@]})."
 
 if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
   echo "PULL-REQUEST CHANGE DETECTION: Taking all commits in this PR into account to trigger workflows for all changed packages!"
+  NOPR=""
 else
   echo "DEFAULT (MASTER/BRANCH) CHANGE DETECTION: Only taking changes of the last commits into account. Only workflows of packages which have been changed in this commit are triggered!"
+  NOPR="-1"
 fi
 
+CHANGED_PATH_SEGMENTS=$(git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
+echo "git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq"
+echo "-------"
+echo "${CHANGED_PATH_SEGMENTS}"
+echo "-------"
 for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}
 do
-
   echo " - Current Package Config: ${PACKAGE_CONFIG}"
   IFS='='
   read -ra ADDR <<< "${PACKAGE_CONFIG}"
@@ -87,18 +93,10 @@ do
   
   IFS=','
   read -ra PATHSEGMENTS <<< "${PACKAGE_PATH_SEGMENTS}"
-  
-  if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
-    NOPR=""
-  else
-    NOPR="-1"
-  fi
 
-  CHANGED_PATH_SEGMENTS=$(git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
-  echo "git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq"
   for CHANGED_PATH_SEGMENT in ${CHANGED_PATH_SEGMENTS[@]}; do
     for PATH_SEGMENT in ${PACKAGE_PATH_SEGMENTS[@]}; do
-      echo "${PATH_SEGMENT} == ${CHANGED_PATH_SEGMENT}?"
+      echo " - Change Detected?: ${PATH_SEGMENT} == ${CHANGED_PATH_SEGMENT}"
       if [ "${PATH_SEGMENT}" == "${CHANGED_PATH_SEGMENT}" ]; then
         CHANGE_DETECTED="true"
         break
@@ -110,7 +108,7 @@ do
       break
     fi
   done
-  echo " => ${PATH_SEGMENT} == ${CHANGED_PATH_SEGMENT}? ${CHANGE_DETECTED}"
+  echo " - Changed Detected: ${PATH_SEGMENT} == ${CHANGED_PATH_SEGMENT}? ${CHANGE_DETECTED}"
   
   if [ "${CHANGE_DETECTED}" == "false" ]; then
     INCLUDED=0
