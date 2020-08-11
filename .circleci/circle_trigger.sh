@@ -81,8 +81,11 @@ echo "git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-
 echo "-------"
 echo "${CHANGED_PATH_SEGMENTS}"
 echo "-------"
-for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}
-do
+
+IFS="\n"
+read -ra CHANGED_PATH_SEGMENTS <<< "${CHANGED_PATH_SEGMENTS}"
+
+for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
   echo " - Current Package Config: ${PACKAGE_CONFIG}"
   IFS='='
   read -ra ADDR <<< "${PACKAGE_CONFIG}"
