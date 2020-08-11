@@ -81,42 +81,28 @@ fi
 CHANGED_PATH_SEGMENTS="$(git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)"
 echo "git --no-pager log $NOPR origin/${PARENT_BRANCH}..${CIRCLE_BRANCH} --name-only --oneline | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq"
 IFS=$'\n' read -ra CHANGED_PATH_SEGMENTS2 <<< "${CHANGED_PATH_SEGMENTS}"
-echo "-------"
-echo "${CHANGED_PATH_SEGMENTS}"
-echo "-------"
-echo "${CHANGED_PATH_SEGMENTS2}"
-echo "-------"
-
-
 
 for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
-  echo " - Current Package Config: ${PACKAGE_CONFIG}"
   IFS='=' read -ra ADDR <<< "${PACKAGE_CONFIG}"
   PACKAGE=${ADDR[0]}
   PACKAGE_PATH_SEGMENTS=${ADDR[1]}
-  
-  echo " - Package:               ${PACKAGE}"
-  echo " - Package Path Segments: ${PACKAGE_PATH_SEGMENTS}"
-  
+    
   IFS=',' read -ra PATHSEGMENTS <<< "${PACKAGE_PATH_SEGMENTS}"
   for PATH_SEGMENT in ${PATHSEGMENTS[@]}; do
-    echo " - PATH_SEGMENT: ${PATH_SEGMENT}"
+    #echo " - PATH_SEGMENT: ${PATH_SEGMENT}"
     for CHANGED_PATH_SEGMENT in ${CHANGED_PATH_SEGMENTS[@]}; do
-      echo "   -- CHANGED_PATH_SEGMENT: ${CHANGED_PATH_SEGMENT}"
+      #echo "   -- CHANGED_PATH_SEGMENT: ${CHANGED_PATH_SEGMENT}"
       if [ "${PATH_SEGMENT}" == "${CHANGED_PATH_SEGMENT}" ]; then
         CHANGE_DETECTED="true"
         break
       else
         CHANGE_DETECTED="false"
       fi
-      echo " => ${CHANGE_DETECTED}"
     done
     if [ "${CHANGE_DETECTED}" == "true" ]; then
       break
     fi
   done
-
-  echo " - Changed Detected: ${PATH_SEGMENT} == ${CHANGED_PATH_SEGMENT}? ${CHANGE_DETECTED}"
   
   if [ "${CHANGE_DETECTED}" == "false" ]; then
     INCLUDED=0
