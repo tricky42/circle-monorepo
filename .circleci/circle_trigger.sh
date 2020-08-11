@@ -13,15 +13,6 @@ CIRCLE_API="https://circleci.com/api"
 ############################################
 ## 0. Environments
 ############################################
-
-sudo add-apt-repository ppa:git-core/ppa -y
-sudo apt-get update
-sudo apt-get install git -y
-git --version
-git config --global pull.rebase false
-git branch --set-upstream-to=origin/test-pr test-pr
-git pull --all
-
 echo "################################################################"
 echo "################################################################"
 echo "## CIRCLE TRIGGER SCRIPT ENV"
@@ -32,7 +23,6 @@ echo " - CIRCLE_PROJECT_REPONAME: ${CIRCLE_PROJECT_REPONAME}"
 echo " - CIRCLE_PR_REPONAME:      ${CIRCLE_PR_REPONAME}"
 echo " - CIRCLE_PR_NUMBER:        ${CIRCLE_PR_NUMBER}"
 echo " - CIRCLE_BRANCH:           ${CIRCLE_BRANCH}"
-
 echo "################################################################"
 
 ############################################
@@ -46,12 +36,8 @@ echo "################################################################"
 echo "################################################################"
 
 LAST_COMPLETED_BUILD_URL="${CIRCLE_API}/v1.1/project/${REPOSITORY_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?filter=completed&limit=100&shallow=true"
-echo "LAST_COMPLETED_BUILD_URL: $LAST_COMPLETED_BUILD_URL"
 curl -Ss -u ${CIRCLE_TOKEN}: ${LAST_COMPLETED_BUILD_URL} > circle.json
 LAST_COMPLETED_BUILD_SHA=`cat circle.json | jq -r 'map(select(.status == "success") | select(.workflows.workflow_name != "ci")) | .[0]["vcs_revision"]'`
-
-echo "#### LAST_COMPLETED_BUILD_SHA: "
-echo "${LAST_COMPLETED_BUILD_SHA}"
 
 if  [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COMPLETED_BUILD_SHA) != "commit" ]]; then
   echo -e "\e[93mThere are no completed CI builds in branch ${CIRCLE_BRANCH}.\e[0m"
@@ -97,6 +83,7 @@ if [[ ${LAST_COMPLETED_BUILD_SHA} == "null" ]] || [[ $(git cat-file -t $LAST_COM
   LAST_COMPLETED_BUILD_SHA=$(git rev-parse origin/master)
 fi
 echo "PARENT_BRANCH: ${PARENT_BRANCH}"
+
 ############################################
 ## 2. Changed packages
 ############################################
@@ -104,8 +91,6 @@ echo "PARENT_BRANCH: ${PARENT_BRANCH}"
 #MODIFIED: we use a txt config to determine which directory paths represent packages with their own CircleCI workflow.
 #PACKAGES=$(ls ${ROOT} -l | grep ^d | awk '{print $9}')
 PACKAGES=$(<.circleci/packages.txt)
-echo "Packages: "
-echo "$PACKAGES"
 
 echo
 echo "Searching for changes since commit [${LAST_COMPLETED_BUILD_SHA:0:7}] ..."
@@ -125,25 +110,16 @@ FAILED_WORKFLOWS=$(cat circle.json \
 
 echo "Workflows currently in failed status: (${FAILED_WORKFLOWS[@]})."
 
-git --version 
-
 for PACKAGE in ${PACKAGES[@]}
 do
   PACKAGE_PATH=${ROOT#.}/$PACKAGE
   if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
-    export TERM=xterm-256color
-    
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git --no-pager log origin/master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq)
     echo "PULL-REQUEST HANDLINE (${PACKAGE} - ${LATEST_COMMIT_SINCE_LAST_BUILD})"
-    echo "git --no-pager log origin/master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq"
-    git --no-pager log origin/master..${CIRCLE_BRANCH} --name-only --oneline -- ${PACKAGE} | sed '/ /d' | sed '/\//!d' | sed 's/\/.*//' | sort | uniq
-    
   else
     LATEST_COMMIT_SINCE_LAST_BUILD=$(git log -1 $LAST_COMPLETED_BUILD_SHA..$CIRCLE_SHA1 --format=format:%H --full-diff -- ${PACKAGE_PATH#/})
-    echo "DEFAULT (MASTER / BRANCH) HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"
-    
+    echo "DEFAULT (MASTER / BRANCH) HANDLINE (${LATEST_COMMIT_SINCE_LAST_BUILD})"   
   fi
-  
 
   if [[ -z "$LATEST_COMMIT_SINCE_LAST_BUILD" ]]; then
     INCLUDED=0
