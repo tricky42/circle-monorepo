@@ -84,7 +84,7 @@ echo "-------"
 echo "${CHANGED_PATH_SEGMENTS}"
 echo "-------"
 
-IFS='\n' read -ra CHANGED_PATH_SEGMENTS <<< "${CHANGED_PATH_SEGMENTS}"
+IFS='\n' read -ra CHANGED_PATH_SEGMENTS2 <<< "${CHANGED_PATH_SEGMENTS}"
 
 for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
   echo " - Current Package Config: ${PACKAGE_CONFIG}"
@@ -98,7 +98,7 @@ for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
   IFS=',' read -ra PATHSEGMENTS <<< "${PACKAGE_PATH_SEGMENTS}"
   for PATH_SEGMENT in ${PATHSEGMENTS[@]}; do
     echo " - PATH_SEGMENT: ${PATH_SEGMENT}"
-    for CHANGED_PATH_SEGMENT in ${CHANGED_PATH_SEGMENTS[@]}; do
+    for CHANGED_PATH_SEGMENT in ${CHANGED_PATH_SEGMENTS2[@]}; do
       echo "   -- CHANGED_PATH_SEGMENT: ${CHANGED_PATH_SEGMENT}"
       if [ "${PATH_SEGMENT}" == "${CHANGED_PATH_SEGMENT}" ]; then
         CHANGE_DETECTED="true"
