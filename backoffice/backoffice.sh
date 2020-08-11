@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "NEW-PR Backoffice magic...!"
+echo "NEW-PR NESTED Backoffice magic...!"
 exit 0
