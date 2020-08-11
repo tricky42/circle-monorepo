@@ -84,21 +84,26 @@ echo "-------"
 echo "${CHANGED_PATH_SEGMENTS}"
 echo "-------"
 
+SAVEIFS=$IFS
 IFS="\n"
 read -ra CHANGED_PATH_SEGMENTS <<< "${CHANGED_PATH_SEGMENTS}"
+IFS=$SAFEIFS
 
 for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
   echo " - Current Package Config: ${PACKAGE_CONFIG}"
+  SAVEIFS=$IFS
   IFS='='
   read -ra ADDR <<< "${PACKAGE_CONFIG}"
   PACKAGE=${ADDR[0]}
   PACKAGE_PATH_SEGMENTS=${ADDR[1]}
+  IFS=$SAFEIFS
+
   echo " - Package:               ${PACKAGE}"
   echo " - Package Path Segments: ${PACKAGE_PATH_SEGMENTS}"
   
+  SAVEIFS=$IFS
   IFS=','
   read -ra PATHSEGMENTS <<< "${PACKAGE_PATH_SEGMENTS}"
-
   for CHANGED_PATH_SEGMENT in ${CHANGED_PATH_SEGMENTS[@]}; do
     echo " - CHANGED_PATH_SEGMENT: ${CHANGED_PATH_SEGMENT}"
     for PATH_SEGMENT in ${PACKAGE_PATH_SEGMENTS[@]}; do
@@ -115,6 +120,8 @@ for PACKAGE_CONFIG in ${PACKAGE_CONFIGS[@]}; do
       break
     fi
   done
+  IFS=$SAFEIFS
+
   echo " - Changed Detected: ${PATH_SEGMENT} == ${CHANGED_PATH_SEGMENT}? ${CHANGE_DETECTED}"
   
   if [ "${CHANGE_DETECTED}" == "false" ]; then
