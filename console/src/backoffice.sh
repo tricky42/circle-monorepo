@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "NEW NESTED BRANCH Backoffice magic...!!!"
+echo "Console magic...!!!"
 exit 0
