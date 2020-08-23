@@ -46,6 +46,8 @@ jobs:
       msg:
         type: string
         default: World
+      path: 
+        type: string
     docker: 
       - image: cimg/base:stable
     steps:
@@ -54,8 +56,8 @@ jobs:
           name: "Hello << parameters.msg >>!"
           command: |
             echo "Hello << parameters.msg >>!"
-            shellPath=$(<< parameters.msg >>//"_"/"\/")
-            ./${shellPath}/<< parameters.msg >>.sh
+            
+            ./<< parameters.path >>/script.sh
 
 workflows:
   monorepo:
@@ -64,31 +66,43 @@ workflows:
       - trigger-workflows
 
   backoffice-src:
-    when: << pipeline.parameters.backoffice >>
+    when: << pipeline.parameters.backoffice-src >>
     jobs:
       - hello:
           msg: backoffice-src
+          path: backoffice/src
 
   backoffice-docker:
-    when: << pipeline.parameters.backoffice >>
+    when: << pipeline.parameters.backoffice-docker >>
     jobs:
       - hello:
           msg: backoffice-docker
+          path: backoffice/docker
 
   backoffice-helm:
-    when: << pipeline.parameters.backoffice >>
+    when: << pipeline.parameters.backoffice-helm >>
     jobs:
       - hello:
           msg: backoffice-helm
+          path: backoffice/helm
 
   console-src:
-    when: << pipeline.parameters.console >>
+    when: << pipeline.parameters.console-src >>
     jobs:
       - hello:
           msg: console-src
+          path: console/src
 
   console-helm:
-    when: << pipeline.parameters.console >>
+    when: << pipeline.parameters.console-helm >>
     jobs:
       - hello:
           msg: console-helm
+          path: console/helm
+
+  stack:
+    when: << pipeline.parameters.stack >>
+    jobs:
+      - hello:
+          msg: stack
+          path: stack
