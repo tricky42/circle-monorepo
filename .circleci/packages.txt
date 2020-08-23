@@ -1,2 +1,0 @@
-backoffice=backoffice,stack
-console=console
