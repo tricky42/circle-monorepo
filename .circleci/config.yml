@@ -20,7 +20,7 @@ jobs:
             .circleci/cli dev ci monorepo changes -p origin/master..${CIRCLE_BRANCH} -v -m full -r .
             .circleci/cli dev ci monorepo components -p origin/master..${CIRCLE_BRANCH} -v -m all -r .
             echo "-------------"
-            .circleci/cli dev ci monorepo components -p origin/master..${CIRCLE_BRANCH} -v -m changed -r .
+            .circleci/cli dev ci monorepo components -p origin/master..${CIRCLE_BRANCH} -m changed -r .
 workflows:
   monorepo:
     jobs:
