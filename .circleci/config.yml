@@ -10,10 +10,22 @@ parameters:
     type: boolean
     default: true
 
-  backoffice:
+  backoffice-src:
     type: boolean
     default: false
-  console:
+  backoffice-helm:
+    type: boolean
+    default: false
+  backoffice-docker:
+    type: boolean
+    default: false
+  console-src:
+    type: boolean
+    default: false
+  console-helm:
+    type: boolean
+    default: false
+  stack:
     type: boolean
     default: false
 
@@ -42,7 +54,8 @@ jobs:
           name: "Hello << parameters.msg >>!"
           command: |
             echo "Hello << parameters.msg >>!"
-            ./<< parameters.msg >>/<< parameters.msg >>.sh
+            shellPath=$(<< parameters.msg >>//"_"/"\/")
+            ./${shellPath}/<< parameters.msg >>.sh
 
 workflows:
   monorepo:
@@ -50,14 +63,32 @@ workflows:
     jobs:
       - trigger-workflows
 
-  backoffice:
+  backoffice-src:
     when: << pipeline.parameters.backoffice >>
     jobs:
       - hello:
-          msg: backoffice
+          msg: backoffice-src
 
-  console:
+  backoffice-docker:
+    when: << pipeline.parameters.backoffice >>
+    jobs:
+      - hello:
+          msg: backoffice-docker
+
+  backoffice-helm:
+    when: << pipeline.parameters.backoffice >>
+    jobs:
+      - hello:
+          msg: backoffice-helm
+
+  console-src:
     when: << pipeline.parameters.console >>
     jobs:
       - hello:
-          msg: console
+          msg: console-src
+
+  console-helm:
+    when: << pipeline.parameters.console >>
+    jobs:
+      - hello:
+          msg: console-helm
