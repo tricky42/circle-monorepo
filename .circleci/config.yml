@@ -21,6 +21,37 @@ jobs:
             .circleci/cli dev ci monorepo components -p origin/master..${CIRCLE_BRANCH} -v -m all -r .
             echo "-------------"
             .circleci/cli dev ci monorepo components -p origin/master..${CIRCLE_BRANCH} -m changed -r .
+      - run:
+          name: Backoffice
+          command: |
+            cd backoffice/src
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Backoffice Docker
+          command: |
+            cd backoffice/docker
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Backoffice Helm
+          command: |
+            cd backoffice/helm
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Console Helm
+          command: |
+            cd console/helm
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Console
+          command: |
+            cd console/src
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Stack
+          command: |
+            cd stack
+            ../.circleci/cli dev ci monorepo run -r .. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+            
 workflows:
   monorepo:
     jobs:
