@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "Stack magic...!!!"
+echo "[c1] Stack magic...!!!"
 exit 0
