@@ -1,0 +1,4 @@
+name: Backoffice Docker
+id: backoffice-docker
+deps:
+  - backoffice

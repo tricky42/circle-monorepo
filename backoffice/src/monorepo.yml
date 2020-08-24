@@ -1,0 +1,4 @@
+name: Backoffice Service
+id: backoffice
+deps:
+  - terraform

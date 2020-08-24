@@ -5,59 +5,55 @@ orbs:
   # Declare a dependency on the welcome-orb
   welcome: circleci/welcome-orb@0.4.1
 
-parameters:
-  trigger:
-    type: boolean
-    default: true
-
-  backoffice:
-    type: boolean
-    default: false
-  console:
-    type: boolean
-    default: false
-
 jobs:
-  trigger-workflows:
+  monorepo:
     docker: 
       - image: cimg/base:stable
     steps:
       - checkout
       - run:
-          name: Trigger workflows
+          name: Use CLI
           command: |
-            chmod +x .circleci/circle_trigger.sh 
-            .circleci/circle_trigger.sh
-
-  hello: 
-    parameters:
-      msg:
-        type: string
-        default: World
-    docker: 
-      - image: cimg/base:stable
-    steps:
-      - checkout 
-      - run: 
-          name: "Hello << parameters.msg >>!"
+            chmod +x .circleci/cli
+            .circleci/cli dev ci monorepo changes -p origin/master..${CIRCLE_BRANCH} -v -m directories -r .
+            .circleci/cli dev ci monorepo changes -p origin/master..${CIRCLE_BRANCH} -v -m files -r .
+            .circleci/cli dev ci monorepo changes -p origin/master..${CIRCLE_BRANCH} -v -m full -r .
+            .circleci/cli dev ci monorepo components -p origin/master..${CIRCLE_BRANCH} -v -m all -r .
+            echo "-------------"
+            .circleci/cli dev ci monorepo components -p origin/master..${CIRCLE_BRANCH} -m changed -r .
+      - run:
+          name: Backoffice
           command: |
-            echo "Hello << parameters.msg >>!"
-            ./<< parameters.msg >>/<< parameters.msg >>.sh
-
+            cd backoffice/src
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Backoffice Docker
+          command: |
+            cd backoffice/docker
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Backoffice Helm
+          command: |
+            cd backoffice/helm
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Console Helm
+          command: |
+            cd console/helm
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Console
+          command: |
+            cd console/src
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+      - run:
+          name: Stack
+          command: |
+            cd stack
+            ../.circleci/cli dev ci monorepo run -r .. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+            
 workflows:
   monorepo:
-    when: << pipeline.parameters.trigger >>
     jobs:
-      - trigger-workflows
+      - monorepo
 
-  backoffice:
-    when: << pipeline.parameters.backoffice >>
-    jobs:
-      - hello:
-          msg: backoffice
-
-  console:
-    when: << pipeline.parameters.console >>
-    jobs:
-      - hello:
-          msg: console
