@@ -25,32 +25,38 @@ jobs:
           name: Backoffice
           command: |
             cd backoffice/src
-            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_affected
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_changed
       - run:
           name: Backoffice Docker
           command: |
             cd backoffice/docker
-            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_affected
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_changed
       - run:
           name: Backoffice Helm
           command: |
             cd backoffice/helm
-            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_affected
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_changed
       - run:
           name: Console Helm
           command: |
             cd console/helm
-            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_affected
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_changed
       - run:
           name: Console
           command: |
             cd console/src
-            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_affected
+            ../../.circleci/cli dev ci monorepo run -r ../.. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_changed
       - run:
           name: Stack
           command: |
             cd stack
-            ../.circleci/cli dev ci monorepo run -r .. -p origin/master..${CIRCLE_BRANCH} -c "make test"
+            ../.circleci/cli dev ci monorepo run -r .. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_affected
+            ../.circleci/cli dev ci monorepo run -r .. -p origin/master..${CIRCLE_BRANCH} -c "make test" -m current_changed
             
 workflows:
   monorepo:
